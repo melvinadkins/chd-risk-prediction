@@ -34,7 +34,12 @@ class PatientData(BaseModel):
 
 @app.get("/")
 def home():
-    return {"message": "Welcome to the CHD Risk Prediction API."}
+    #return {"message": "Welcome to the CHD Risk Prediction API."}
+    return {
+        "message": "CHD Risk Prediction API",
+        "docs": "/docs",
+        "endpoints": ["/predict", "/predict_batch"]
+    }
 
 @app.post("/predict")
 def predict_chd_risk(data: PatientData):
