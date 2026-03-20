@@ -2,6 +2,9 @@
 
 A production-style end-to-end machine learning pipeline predicting 10-year coronary heart disease (CHD) risk using a tuned Logistic Regression classifier, served via a FastAPI REST API.
 
+**Objective**   
+The objective is to identify high-risk patients while minimizing missed CHD cases. Due to class imbalance (~15% positive rate), accuracy is not an appropriate metric. Model selection is performed using ROC-AUC to evaluate ranking performance, while the classification threshold is optimized on a validation set using F1-score to balance precision (limiting unnecessary interventions) and recall (capturing true CHD cases).
+
 ---
 
 ## 🔍 Project Overview
@@ -145,7 +148,12 @@ chd-risk-prediction/
 - Correlation analysis
 - Feature Relationships
 
-### 2️⃣ Feature Engineering
+### 2️⃣ Validation Strategy
+- **Training Set:** Model training with stratified cross-validation (`RandomizedSearchCV`)
+- **Validation Set:** Threshold optimization to maximize F1-score
+- **Test Set:** Final unbiased evaluation of model performance
+
+### 3️⃣ Feature Engineering
 
 Custom sklearn transformer:
 
@@ -153,20 +161,19 @@ Engineered features include:
 * Mean Arterial Pressure (MAP)
 * Pulse Pressure
 
-### 3️⃣ Model Selection
+### 4️⃣ Pipeline Creation
+Constructed modular sklearn pipelines for Logistic Regression and XGBoost, integrating preprocessing, feature engineering, and model training to ensure consistent transformations and prevent data leakage.
 
-Penalized Logistic Regression was selected for its performance on test data. It outperforms XGBoost across *ROC-AUC*, *Precision*, *Recall*, *F1-score*, and *KS*.
-
-### 4️⃣ Hyperparameter Tuning
+### 5️⃣ Hyperparameter Tuning
 
 `RandomizedSearchCV` with:
 - Stratified K-Fold cross-validation
 - Fixed `random_state` for reproducibility
 - Optimized for ROC-AUC
 - ElasticNet regularization (`saga` solver) for sparse, interpretable coefficients
-- Final model retrained on full training data after tuning on validation set
 
-### 5️⃣ Threshold Optimization
+### 6️⃣ Threshold Optimization
+Final model retrained on combined training and validation data after hyperparameter and threshold selection
 
 Classification threshold was selected based on F1-score performance on a held-out validation set.
 
@@ -184,7 +191,7 @@ Classification threshold was selected based on F1-score performance on a held-ou
   <img src="artifacts/confusion_matrix_XGBoost_(Threshold_0.11).png" width="45%" />
 </p>
 
-### 6️⃣ SHAP Feature Importance
+### 7️⃣ SHAP Feature Importance
 
 SHAP analysis was used to interpret model predictions and validate that the model learned clinically meaningful patterns. Plots saved in `artifacts/`.
 
