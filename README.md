@@ -207,6 +207,12 @@ SHAP analysis was used to interpret model predictions and validate that the mode
 
 ## 🌐 API Reference
 
+The model is deployed and accessible via Render:
+
+👉 https://chd-risk-prediction-api.onrender.com/docs
+
+Use the interactive UI to test single and batch predictions.
+
 The FastAPI app (`app/main.py`) exposes two endpoints:
 
 ### `POST /predict` — Single Patient Prediction
