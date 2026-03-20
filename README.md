@@ -24,6 +24,8 @@ This project builds an end-to-end binary classification pipeline to predict a pa
 - Heart Rate
 - Glucose
 
+<img src="artifacts/ten_year_chd_distribution.png" width="600"/>
+
 Two models were evaluated:
 
 - Logistic Regression (Champion Model)
@@ -126,6 +128,11 @@ chd-risk-prediction/
 | Logistic Regression | 0.3131 | < 0.0001 |
 | XGBoost | 0.2792 | < 0.0001 |
 
+<p align="center">
+  <img src="artifacts/roc_curve_comparison.png" width="45%" />
+  <img src="artifacts/precision_recall_curve_comparison.png" width="45%" />
+</p>
+
 ---
 
 ## 💡 Methodology
@@ -164,7 +171,18 @@ Penalized Logistic Regression was selected for its performance on test data. It 
 Classification threshold was selected based on F1-score performance on a held-out validation set.
 
 - Logistic Regression optimal threshold: **0.39**
+
+<p align="center">
+  <img src="artifacts/threshold_tuning_plot_0.39.png" width="45%" />
+  <img src="artifacts/confusion_matrix_Logistic_Regression_(Threshold_0.39).png" width="45%" />
+</p>
+
 - XGBoost optimal threshold: **0.11**
+
+<p align="center">
+  <img src="artifacts/threshold_tuning_plot_0.11.png" width="45%" />
+  <img src="artifacts/confusion_matrix_XGBoost_(Threshold_0.11).png" width="45%" />
+</p>
 
 ### 6️⃣ SHAP Feature Importance
 
@@ -172,7 +190,11 @@ SHAP analysis was used to interpret model predictions and validate that the mode
 
 **Logistic Regression**
 
+<img src="artifacts/shap_summary_logreg.png" width="600" height="600"/>
+
 **XGBoost**
+
+<img src="artifacts/shap_summary_xgb.png" width="600" height="600"/>
 
 ---
 
