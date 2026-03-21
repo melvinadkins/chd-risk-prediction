@@ -324,8 +324,8 @@ Tests cover:
 - FastAPI application with single and batch prediction endpoints
 - Serialized `.joblib` artifact bundling pipeline, threshold, and metadata
 - SHAP interpretability analysis
-- Reproducible notebooks with clear separation of EDA and modeling
-- Pytest-based API test suite
+- Reproducible notebooks for EDA and modeling
+- test scripts for API
 
 ---
 
