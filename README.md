@@ -1,7 +1,7 @@
 # Framingham Heart Disease Risk Model
 
 A production-style end-to-end machine learning pipeline predicting 10-year coronary heart disease (CHD) risk using a tuned Logistic Regression classifier, served via a FastAPI REST API.
-
+ 
 **Objective**   
 The objective is to identify high-risk patients while minimizing missed CHD cases. Due to class imbalance (~15% positive rate), accuracy is not an appropriate metric. Model selection is performed using ROC-AUC to evaluate ranking performance, while the classification threshold is optimized on a validation set using F1-score to balance precision (limiting unnecessary interventions) and recall (capturing true CHD cases).
 
@@ -11,21 +11,21 @@ The objective is to identify high-risk patients while minimizing missed CHD case
 
 This project builds an end-to-end binary classification pipeline to predict a patient's 10-year risk of coronary heart disease using clinical and lifestyle features from the **Framingham Heart Study** dataset:
 
-- Age
-- Sex
-- Education
-- Current Smoker
-- Cigarettes Per Day
-- Blood Pressure Medication
-- Prevalent Stroke
-- Prevalent Hypertension
-- Diabetes
-- Total Cholesterol
-- Systolic Blood Pressure
-- Diastolic Blood Pressure
-- BMI
-- Heart Rate
-- Glucose
+- Age: Age of patient (years)
+- Sex: Binary feature for patient sex 
+- Education: Education level of the patient
+- Current Smoker: Flag indicating whether the patient currently smokes
+- Cigarettes Per Day: Number of cigarettes the patient smokes each day
+- Blood Pressure Medication: Flag indicating whether the patient takes blood pressure medication
+- Prevalent Stroke: Flag indicating history of stroke
+- Prevalent Hypertension: Flag indicating history of hypertension
+- Diabetes: Flag indicating diabetes
+- Total Cholesterol: Patient's total cholesterol level
+- Systolic Blood Pressure: Patient's systolic blood pressure
+- Diastolic Blood Pressure: Patient's diastolic blood pressure
+- BMI: Patient's Body Mass Index
+- Heart Rate: Patient's heart rate
+- Glucose: Patient's glucose level
 
 <img src="artifacts/ten_year_chd_distribution.png" width="600"/>
 
