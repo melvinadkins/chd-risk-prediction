@@ -13,7 +13,7 @@ model = joblib.load(MODEL_PATH)
 
 # Initialize FastAPI app
 app = FastAPI(title="CHD Risk Prediction API")
-
+ 
 # Define input data model
 class PatientData(BaseModel):
     age: int = Field(..., ge=18, le=120, description="Age of the patient in years")
