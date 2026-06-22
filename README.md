@@ -1,135 +1,21 @@
 # Framingham Heart Disease Risk Model
 
-A production-style end-to-end machine learning pipeline predicting 10-year coronary heart disease (CHD) risk using a tuned Logistic Regression classifier, served via a FastAPI REST API.
- 
-**Objective**   
-The objective is to identify high-risk patients while minimizing missed CHD cases. Due to class imbalance (~15% positive rate), accuracy is not an appropriate metric. Model selection is performed using ROC-AUC to evaluate ranking performance, while the classification threshold is optimized on a validation set using F1-score to balance precision (limiting unnecessary interventions) and recall (capturing true CHD cases).
+Predicting a patient's 10-year risk of coronary heart disease using clinical and lifestyle features from the Framingham Heart Study. The model is deployed as a REST API with single and batch prediction endpoints.
+
+👉 **[Try the live API](https://chd-risk-prediction-api.onrender.com/docs)** — interactive Swagger UI, no setup required
+
+**[Modeling notebook](notebooks/02_modeling.ipynb)** · **[EDA notebook](notebooks/01_eda.ipynb)**
 
 ---
 
-## 🔍 Project Overview
+## Results
 
-This project builds an end-to-end binary classification pipeline to predict a patient's 10-year risk of coronary heart disease using clinical and lifestyle features from the **Framingham Heart Study** dataset:
+Two models were evaluated. Logistic Regression outperformed XGBoost on both ROC-AUC and KS statistic despite being the simpler model — consistent with the Framingham dataset's relatively small size (~4,000 patients) and the approximately linear relationships between clinical risk factors and CHD incidence.
 
-- Age: Age of patient (years)
-- Sex: Binary feature for patient sex 
-- Education: Education level of the patient
-- Current Smoker: Flag indicating whether the patient currently smokes
-- Cigarettes Per Day: Number of cigarettes the patient smokes each day
-- Blood Pressure Medication: Flag indicating whether the patient takes blood pressure medication
-- Prevalent Stroke: Flag indicating history of stroke
-- Prevalent Hypertension: Flag indicating history of hypertension
-- Diabetes: Flag indicating diabetes
-- Total Cholesterol: Patient's total cholesterol level
-- Systolic Blood Pressure: Patient's systolic blood pressure
-- Diastolic Blood Pressure: Patient's diastolic blood pressure
-- BMI: Patient's Body Mass Index
-- Heart Rate: Patient's heart rate
-- Glucose: Patient's glucose level
-
-<img src="artifacts/ten_year_chd_distribution.png" width="600"/>
-
-Two models were evaluated:
-
-- Logistic Regression (Champion Model)
-- XGBoost
-
-After hyperparameter tuning with 5-fold RandomSearchCV, and optimizing the classification threshold, the champion model achieved:
-
-🏆 **ROC-AUC: 0.6949 | Recall (CHD): 0.7625 | Precision (CHD): 0.2103 | F1-Score: 0.3297 | KS Statistic: 0.3131
-
----
-
-## Production Pipeline Architecture
-
-The final model is a fully reproducible sklearn pipeline:
-
-```
-Pipeline
-├── FeatureEngineering()
-│   └── Derived features (e.g., MAP, pulse pressure, ratios)
-│
-├── ColumnTransformer
-│   ├── Numerical Pipeline
-│   │   ├── Median Imputation
-│   │   ├── Winsorization (outlier capping)
-│   │   └── Standard Scaling
-│   │
-│   └── Categorical Pipeline
-│       ├── Most Frequent Imputation
-│    
-└── Logistic Regression (Elastic Net)
-    ├── solver = "saga"
-    ├── class_weight = "balanced"
-    ├── C = 2.077
-    └── l1_ratio = 0.632
-```
-This helps 
-* Reduce data leakage
-* Apply consistent data transformations and preprocessing
-
-The full model and pipeline are generated and saved to models subfolder with train.py
-
-```python
-joblib.dump({
-    "pipeline": pipeline,
-    "threshold": THRESHOLD,
-    "features": NUM_FEATURES + CAT_FEATURES,
-    "model_type": "LogisticRegression"
-}, MODEL_PATH)
-```
-
-## 📁 Repository Structure
-
-```
-chd-risk-prediction/
-├── app/
-│   └── main.py                 # FastAPI app (single + batch prediction)
-├── artifacts/
-│   ├── confusion_matrix_Logistic_Regression_(Threshold_0.5).png 
-|   ├── confusion_matrix_Logistic_Regression_(Threshold_0.39).png 
-|   ├── confusion_matrix_XGBoost_(Threshold_0.11).png 
-|   ├── confusion_matrix_XGBoost_(Threshold_0.50).png
-│   ├── precision_recall_curve_comparison.png
-│   ├── roc_curve_comparison.png
-│   ├── shap_summary_logreg.png
-│   ├── shap_summary_xgb.png
-│   ├── ten_year_chd_distribution.png
-│   ├── threshold_tuning_plot_0.11.png
-│   └── threshold_tuning_plot_0.39.png
-├── models/
-│   └── chd_risk_model.joblib   # Trained pipeline artifact
-├── notebooks/
-│   ├── 01_eda.ipynb               # Exploratory data analysis
-│   └── 02_modeling.ipynb          # Model training, tuning, and evaluation
-├── src/
-│   ├── config.py               # Paths, constants, hyperparameters
-│   ├── feature_engineering.py  # Custom sklearn feature transformer
-│   ├── preprocessing.py        # Pipeline builder
-│   └── train.py                # Model retraining script
-├── tests/
-│   └── test_main.py            # FastAPI endpoint tests
-├── requirements.txt            # Development dependencies
-└── README.md
-```
-
----
-
-## 🧠 Model Performance
-
-### Model Comparison
-
-| Model | Threshold | ROC-AUC | Precision | Recall | F1-score |
-|---|---|---|---|---|---|
-| Logistic Regression | 0.39 | 0.6949 | 0.2103 | 0.7625 | 0.3297 |
-| XGBoost | 0.11 | 0.6824 | 0.2076 | 0.7500 | 0.3252 |
-
-### KS Statistics (Separation of Score Distributions)
-
-| Model | KS Statistic | p-value |
-|---|---|---|
-| Logistic Regression | 0.3131 | < 0.0001 |
-| XGBoost | 0.2792 | < 0.0001 |
+| Model | Threshold | ROC-AUC | KS Statistic | Recall | Precision | F1 |
+|---|---|---|---|---|---|---|
+| **Logistic Regression** ✓ | 0.39 | 0.6949 | 0.3131 | 0.7625 | 0.2103 | 0.3297 |
+| XGBoost | 0.11 | 0.6824 | 0.2792 | 0.7500 | 0.2076 | 0.3252 |
 
 <p align="center">
   <img src="artifacts/roc_curve_comparison.png" width="45%" />
@@ -138,195 +24,158 @@ chd-risk-prediction/
 
 ---
 
-## 💡 Methodology
+## Why This Problem
 
-### 1️⃣ Exploratory Data Analysis
-
-- Distribution inspection across all features
-- Class imbalance analysis (CHD is a minority class)
-- Outlier detection
-- Correlation analysis
-- Feature Relationships
-
-### 2️⃣ Validation Strategy
-- **Training Set:** Model training with stratified cross-validation (`RandomizedSearchCV`)
-- **Validation Set:** Threshold optimization to maximize F1-score
-- **Test Set:** Final unbiased evaluation of model performance
-
-### 3️⃣ Feature Engineering
-
-Custom sklearn transformer:
-
-Engineered features include:
-* Mean Arterial Pressure (MAP)
-* Pulse Pressure
-
-### 4️⃣ Pipeline Creation
-Constructed modular sklearn pipelines for Logistic Regression and XGBoost, integrating preprocessing, feature engineering, and model training to ensure consistent transformations and prevent data leakage.
-
-### 5️⃣ Hyperparameter Tuning
-
-`RandomizedSearchCV` with:
-- Stratified K-Fold cross-validation
-- Fixed `random_state` for reproducibility
-- Optimized for ROC-AUC
-- ElasticNet regularization (`saga` solver) for sparse, interpretable coefficients
-
-### 6️⃣ Threshold Optimization
-Final model retrained on combined training and validation data after hyperparameter and threshold selection
-
-Classification threshold was selected based on F1-score performance on a held-out validation set.
-
-- Logistic Regression optimal threshold: **0.39**
-
-<p align="center">
-  <img src="artifacts/threshold_tuning_plot_0.39.png" width="45%" />
-  <img src="artifacts/confusion_matrix_Logistic_Regression_(Threshold_0.39).png" width="45%" />
-</p>
-
-- XGBoost optimal threshold: **0.11**
-
-<p align="center">
-  <img src="artifacts/threshold_tuning_plot_0.11.png" width="45%" />
-  <img src="artifacts/confusion_matrix_XGBoost_(Threshold_0.11).png" width="45%" />
-</p>
-
-### 7️⃣ SHAP Feature Importance
-
-SHAP analysis was used to interpret model predictions and validate that the model learned clinically meaningful patterns. Plots saved in `artifacts/`.
-
-**Logistic Regression**
-
-<img src="artifacts/shap_summary_logreg.png" width="600" height="600"/>
-
-**XGBoost**
-
-<img src="artifacts/shap_summary_xgb.png" width="600" height="600"/>
+CHD is a leading cause of mortality, and the value of a risk model here isn't precision — it's recall. A false negative (missing a high-risk patient) carries a far higher cost than a false positive (flagging someone for follow-up who turns out to be low-risk). That asymmetry drives every major modeling decision in this project, from metric selection to threshold choice.
 
 ---
 
-## 🌐 API Reference
+## Modeling Approach
 
-The model is deployed and accessible via Render:
+### Simpler model, better results
+Logistic Regression was selected as the champion model over XGBoost. With ~4,000 patients and largely linear risk factor relationships — age, blood pressure, and cholesterol compound CHD risk in ways that don't require deep interaction modeling — gradient boosting had more capacity than the data warranted. The ElasticNet penalty (`l1_ratio=0.632`) produces a sparse, interpretable coefficient set, which also aligns with how clinicians reason about risk factors.
 
-👉 https://chd-risk-prediction-api.onrender.com/docs
+### Threshold at 0.39, not 0.50
+The default 0.5 threshold optimizes for balanced classification, not clinical utility. At 0.50, the model misses too many true CHD cases — the cost the problem framing is explicitly trying to avoid. Dropping the threshold to 0.39 recovers recall to 0.76 (capturing 3 in 4 true CHD cases) at the cost of lower precision, which is the correct tradeoff for a population screening tool. Threshold was selected on a held-out validation set and evaluated once on a final test set.
 
-Use the interactive UI to test single and batch predictions.
+### Validation strategy
+Hyperparameter tuning (`RandomizedSearchCV`, 5-fold stratified CV) and threshold selection operate on separate data to avoid the common mistake of optimizing both against the same validation set and reporting the result as unbiased. Final metrics reflect held-out test set performance.
 
-The FastAPI app (`app/main.py`) exposes two endpoints:
+---
 
-### `POST /predict` — Single Patient Prediction
+## Feature Engineering
 
-**Request body:**
-```json
-{
-  "age": 55,
-  "male": 1,
-  "education": 2,
-  "currentSmoker": 0,
-  "cigsPerDay": 0,
-  "BPMeds": 1,
-  "prevalentStroke": 0,
-  "prevalentHyp": 1,
-  "diabetes": 0,
-  "totChol": 230,
-  "sysBP": 140,
-  "diaBP": 90,
-  "BMI": 28,
-  "heartRate": 75,
-  "glucose": 95
-}
+Two hemodynamic features were derived from raw blood pressure measurements — both are standard clinical biomarkers for cardiovascular risk assessment:
+
+| Feature | Formula | Clinical Relevance |
+|---|---|---|
+| Mean Arterial Pressure (MAP) | `DBP + (SBP − DBP) / 3` | Average arterial pressure during one cardiac cycle; elevated MAP indicates sustained vascular stress |
+| Pulse Pressure | `SBP − DBP` | Difference between systolic and diastolic pressure; a marker of arterial stiffness and an independent CHD predictor |
+
+These were implemented as a custom sklearn transformer (`FeatureEngineering`) that integrates cleanly into the pipeline without leaking statistics across train/test splits.
+
+---
+
+## Interpretability
+
+SHAP analysis validated that the model learned clinically meaningful patterns. Age, systolic blood pressure, total cholesterol, glucose, and cigarettes per day are the strongest predictors — all consistent with established cardiovascular risk literature.
+
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <strong>Logistic Regression</strong><br>
+      <img src="artifacts/shap_summary_logreg.png" width="100%" />
+    </td>
+    <td align="center" width="50%">
+      <strong>XGBoost</strong><br>
+      <img src="artifacts/shap_summary_xgb.png" width="100%" />
+    </td>
+  </tr>
+</table>
+
+---
+
+## Pipeline Architecture
+
+The final model is a fully reproducible sklearn pipeline, serialized as a `.joblib` artifact bundling the pipeline, threshold, feature list, and model type:
+
 ```
-
-**Response:**
-```json
-{
-  "chd_risk_probability": 0.412,
-  "chd_risk_prediction": 1
-}
+Pipeline
+├── FeatureEngineering()          # Custom transformer: MAP, pulse pressure
+├── ColumnTransformer
+│   ├── Numerical: median imputation → Winsorization → standard scaling
+│   └── Categorical: most-frequent imputation
+└── LogisticRegression
+    ├── solver     = "saga"
+    ├── penalty    = "elasticnet"
+    ├── C          = 2.077
+    └── l1_ratio   = 0.632
 ```
 
 ---
 
-### `POST /predict_batch` — Batch Patient Predictions
+## API Reference
 
-**Request body:**
+Deployed on Render · **[Interactive docs](https://chd-risk-prediction-api.onrender.com/docs)**
+
+### `POST /predict` — Single patient
+
 ```json
+// Request
 {
-  "patients": [
-    { "age": 55, "male": 1, ... },
-    { "age": 40, "male": 0, ... }
-  ]
+  "age": 55, "male": 1, "education": 2, "currentSmoker": 0,
+  "cigsPerDay": 0, "BPMeds": 1, "prevalentStroke": 0,
+  "prevalentHyp": 1, "diabetes": 0, "totChol": 230,
+  "sysBP": 140, "diaBP": 90, "BMI": 28, "heartRate": 75, "glucose": 95
 }
+
+// Response
+{ "chd_risk_probability": 0.412, "chd_risk_prediction": 1 }
 ```
 
-**Response:**
+### `POST /predict_batch` — Batch patients
+
 ```json
-{
-  "chd_risk_probabilities": [0.412, 0.183],
-  "chd_risk_predictions": [1, 0]
-}
+// Request
+{ "patients": [{ "age": 55, "male": 1, ... }, { "age": 40, "male": 0, ... }] }
+
+// Response
+{ "chd_risk_probabilities": [0.412, 0.183], "chd_risk_predictions": [1, 0] }
 ```
 
 ---
 
-## 🚀 Getting Started
+## Repository Structure
 
-**1. Clone the repository**
+```
+chd-risk-prediction/
+├── app/
+│   └── main.py                 # FastAPI app (single + batch prediction)
+├── artifacts/                  # Saved plots: ROC, PR curves, SHAP, confusion matrices
+├── models/
+│   └── chd_risk_model.joblib   # Serialized pipeline artifact
+├── notebooks/
+│   ├── 01_eda.ipynb
+│   └── 02_modeling.ipynb
+├── src/
+│   ├── config.py               # Paths, constants, hyperparameters
+│   ├── feature_engineering.py  # Custom sklearn transformer
+│   ├── preprocessing.py        # Pipeline builder
+│   └── train.py                # Retraining script
+├── tests/
+│   └── test_main.py            # Endpoint tests: schema, value ranges, probability bounds
+└── requirements.txt
+```
+
+---
+
+## Getting Started
+
 ```bash
+# Clone and enter the repo
 git clone https://github.com/melvinadkins/chd-risk-prediction.git
 cd chd-risk-prediction
-```
 
-**2. Create and activate a virtual environment**
-```bash
+# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate        # Mac/Linux
-venv\Scripts\activate           # Windows
-```
+source venv/bin/activate       # Mac/Linux
+venv\Scripts\activate          # Windows
 
-**3. Install dependencies**
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-**4. Run the API**
-```bash
+# Run the API locally
 uvicorn app.main:app --reload
-```
+# Available at http://127.0.0.1:8000 · Docs at http://127.0.0.1:8000/docs
 
-The API will be available at `http://127.0.0.1:8000`. Interactive docs at `http://127.0.0.1:8000/docs`.
-
-**5. Retrain the model (optional)**
-```bash
+# Retrain the model
 python src/train.py
 ```
 
----
-
-## 🧪 Running Tests
+## Running Tests
 
 ```bash
 pytest tests/test_main.py
 ```
 
-Tests cover:
-- Single prediction endpoint response schema and value ranges
-- Batch prediction endpoint response schema and array lengths
-- Valid probability bounds `[0, 1]` and binary prediction values `{0, 1}`
-
----
-
-## 📌 Key Features
-
-- End-to-end sklearn pipeline with preprocessing, feature engineering, and Logistic Regression
-- Threshold optimization for clinically appropriate recall/precision tradeoff
-- FastAPI application with single and batch prediction endpoints
-- Serialized `.joblib` artifact bundling pipeline, threshold, and metadata
-- SHAP interpretability analysis
-- Reproducible notebooks for EDA and modeling
-- test scripts for API
-
----
-
-*Based on the Framingham Heart Study dataset.*
+*Based on the [Framingham Heart Study](https://www.framinghamheartstudy.org/) dataset.*
