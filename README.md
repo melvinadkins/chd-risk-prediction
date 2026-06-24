@@ -26,7 +26,7 @@ Two models were evaluated. Logistic Regression outperformed XGBoost on both ROC-
 
 ## Why This Problem
 
-CHD is a leading cause of mortality, and the value of a risk model here isn't precision — it's recall. A false negative (missing a high-risk patient) carries a far higher cost than a false positive (flagging someone for follow-up who turns out to be low-risk). That asymmetry drives every major modeling decision in this project, from metric selection to threshold choice.
+CHD is a leading cause of mortality, and the value of a risk model here isn't precision but recall. A false negative (missing a high-risk patient) carries a far higher cost than a false positive (flagging someone for follow-up who turns out to be low-risk). That asymmetry drives every major modeling decision in this project, from metric selection to threshold choice.
 
 ---
 
